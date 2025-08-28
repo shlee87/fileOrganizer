@@ -1,0 +1,107 @@
+# Product Requirements Document (PRD)
+Project: Signed-PDF File Organizer
+Author: Seonghoon Yi
+Date: 2025-08-21
+
+## 1. Purpose / Summary
+Automate moving of signed PDF documents from a single "workplace" drop folder into a structured destination folder based solely on filename metadata. Move occurs only when the filename indicates a signed status (e.g., contains `_signed`, `signed`, `executed`, `final`).
+
+## 2. Background / Context
+Client: LA-based attorney who onboards SK startups into US (Delaware). Current pain: manual document organization. Files are generated and dropped into one workplace folder; signed PDFs should be auto-sorted to reduce manual work.
+
+## 3. Goals (MVP)
+- Detect new or renamed PDF files in workplace.
+- Parse filename of pattern: `<document>_<client>_<YYYY[-]MM[-]DD>_<status>.pdf`.
+- If status indicates signed, move file to: `DEST_ROOT/<client>/<document>/Signed/<original-filename>`.
+- Ensure robustness: only PDFs processed, wait for copy to complete, handle duplicates, logging, dry-run mode.
+
+## 4. Scope
+In scope:
+- Watch a single workplace folder (non-recursive).
+- Only process .pdf files.
+- Support status detection: `signed`, `executed`, `final` (case-insensitive) and explicit `_signed` tag.
+- Destination folder structure derived from parsed filename segments.
+- Duplicate handling: append timestamp to filename.
+- Safe move after file size is stable.
+- Logging for operations and failures.
+
+Out of scope (MVP):
+- UI for rule management.
+- Cloud storage or e-signature integrations.
+- Role-based access controls and encryption at rest (can be added later).
+- Full-text indexing or document templating.
+
+## 5. Functional Requirements
+FR-1: Watch workplace for file creation and move/rename events.
+FR-2: Accept only files with `.pdf` extension.
+FR-3: Parse filename by regex: `^(?P<doc>.+?)_(?P<client>.+?)_(?P<date>\d{4}-?\d{2}-?\d{2})_(?P<status>.+?)\.pdf$` (case-insensitive).
+FR-4: Determine signed status if `status` contains any of `signed`, `executed`, `final` or includes `_signed`.
+FR-5: Wait until file size is stable (configurable timeout) before acting.
+FR-6: Move signed files to `DEST_ROOT/<client>/<doc>/Signed/`.
+FR-7: Normalize folder segment strings (replace unsafe chars, spaces -> underscores).
+FR-8: If destination filename conflicts, append epoch timestamp before extension.
+FR-9: Provide `--dry-run` mode to log intended actions without moving files.
+FR-10: Log every action and error to a file with timestamps.
+
+## 6. Non-Functional Requirements
+NFR-1: Must run on macOS (support launch via launchd or manual).
+NFR-2: Low CPU/memory footprint (simple Python script acceptable).
+NFR-3: Reliable for files up to typical contract sizes (tens of MB).
+NFR-4: Fail-safe: do not delete original files on errors; preserve workplace contents on failure.
+
+## 7. Acceptance Criteria
+- AC-1: When a valid signed PDF is created or renamed into workplace, it appears in correct destination path.
+- AC-2: Non-signed PDFs remain untouched in workplace.
+- AC-3: Duplicate names are not overwritten; new file saved with timestamp suffix.
+- AC-4: Actions logged; dry-run produces the same log entries without moving files.
+- AC-5: Script tolerates a file copy time up to configured timeout and processes after size stabilizes.
+
+## 8. User Stories
+- As an attorney, I want signed PDFs to automatically move to a client/document/Signed folder so I don't manually sort them.
+- As an operator, I want a dry-run to verify behavior before enabling moves.
+- As an admin, I want logs to audit moved files and troubleshoot failures.
+
+## 9. Implementation Approach
+MVP tech stack:
+- Python 3.10+
+- watchdog for filesystem events
+- shutil / pathlib for moves
+- logging module for logs
+
+Key modules:
+- watcher: observe workplace (FileSystemEventHandler)
+- parser: filename regex + normalization
+- mover: stability check + move + duplicate handling
+- CLI: args for workplace path, dest root, dry-run, stable-wait
+- Optional: small SQLite audit table (later)
+
+Deployment:
+- Manual run via `python signed_watcher.py`
+- Provide sample launchd plist for auto-start on macOS (post-MVP)
+
+## 10. Risks & Mitigations
+- Risk: Partial uploads trigger premature moves. Mitigation: wait for file size stable.
+- Risk: Filename variations not captured. Mitigation: log unmatched names and provide list to client for naming standardization; configurable regex later.
+- Risk: Large number of files cause backlog. Mitigation: non-recursive watch and batch processing option later.
+
+## 11. Metrics / Success Measures
+- Reduction in manual file-sorting time (qualitative client feedback).
+- 100% of signed PDFs moved correctly within 60s of copy completion in tests.
+- Zero overwrites of existing destination files.
+
+## 12. Open Questions
+1. Confirm exact accepted date format(s) and whether date can be optional.
+2. Confirm canonical mapping for client names (should surname punctuation be preserved?).
+3. Desired destination root path and whether multi-root support is needed.
+4. Should we keep an audit DB (SQLite) for undo/history now or later?
+
+## 13. Milestones & Estimated Effort (MVP)
+- M1 (1 day): Parser and unit tests for filename parsing.
+- M2 (2 days): Watcher script with stability check, move logic, duplicate handling, logging, dry-run.
+- M3 (0.5 day): Basic README and sample launchd plist.
+- M4 (1 day optional): Add SQLite audit log and simple rollback command.
+
+## 14. Next Steps
+- Confirm answers to Open Questions.
+- Approve MVP milestone plan.
+- I can implement M1+M2 and provide unit tests and a launchd plist. Which next step

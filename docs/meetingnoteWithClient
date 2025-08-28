@@ -1,0 +1,17 @@
+# Meeting Notes with Client
+
+- He is an attorney based on LA in the US.
+- His major workflow are two. One is to corporate a startup who wants to have a corporation in the US from South Korea
+While working this flow, he wants to automate document generation and organization. Many startups wants to be incorporated in Delaware. And Delaware requiers many documents to approve their incorporation.
+He wants to automate the document generation and organization for this flow. The other is to consult on a specific legal issues.
+
+- His painpoints while working are two. First, he doesn't want to spend too much time on document management and organization.So if there is a program that sorts files into folders based on its filename info, it will save his time.
+
+- as an agency to solve his problem, my plan is like this
+
+the file name would be like this 
+
+ex) restricted stock purchase agreement_[clientnames]_[date]_[status].pdf
+
+if this file has been signed and its file name is updated to include the status, it shoud move to a folder based on its filename info.
+
