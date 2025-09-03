@@ -1,0 +1,42 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.swp
+
+# Test and coverage reports
+.coverage
+htmlcov/
+*.log
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+
+# Node modules (if any frontend)
+node_modules/
