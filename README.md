@@ -1,20 +1,38 @@
-# Signed PDF File Organizer
+# File Organizer
 
-Automatically organizes signed PDF documents from a workplace folder into structured destination folders based on filename metadata.
+A full-stack application for automatically organizing signed PDF documents. The system watches a workplace folder and moves signed PDFs to organized destination folders based on filename metadata.
 
-## Installation
+## Project Structure
 
-1. Install Python 3.10+ if not already installed
-2. Install dependencies:
+- **`backend/`** - Python backend service for file monitoring and organization
+- **`frontend/`** - Web interface for monitoring and configuration (coming soon)
+- **`docs/`** - Documentation and project resources
+
+## Quick Start
+
+### Backend Setup
+
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+
+2. Install Python 3.10+ if not already installed
+3. Create and activate virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+4. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-## Usage
-
 ### Basic Usage
 ```bash
-python signed_watcher.py /path/to/workplace /path/to/destination
+cd backend
+python src/signed_watcher.py test_workplace test_destination
 ```
 
 ### Options
@@ -25,11 +43,15 @@ python signed_watcher.py /path/to/workplace /path/to/destination
 ### Example
 ```bash
 # Dry run to test configuration
-python signed_watcher.py ~/workplace ~/organized --dry-run --log-file watcher.log
+python src/signed_watcher.py test_workplace test_destination --dry-run --log-file watcher.log
 
 # Run normally
-python signed_watcher.py ~/workplace ~/organized --log-file watcher.log
+python src/signed_watcher.py test_workplace test_destination --log-file watcher.log
 ```
+
+## Frontend
+
+The frontend web interface is planned for future development. See `frontend/README.md` for more details.
 
 ## Filename Pattern
 
@@ -78,9 +100,11 @@ Path segments are normalized (spaces → underscores, unsafe chars removed).
 
 Run unit tests:
 ```bash
-python -m unittest test_signed_watcher.py -v
+cd backend
+python -m unittest discover tests -v
 ```
 
-## Background Operation (macOS)
+## Development
 
-To run automatically on startup, create a launchd plist file. Example configuration can be found in the docs folder.
+For detailed backend documentation, see `backend/README.md`.
+For frontend development plans, see `frontend/README.md`.

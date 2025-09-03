@@ -1,42 +1,65 @@
-# Python artifacts
+# Operating System
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-*.egg
-*.egg-info/
-dist/
-build/
+*$py.class
 *.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Virtual environments
+# Virtual Environments
 venv/
 env/
 ENV/
 .venv/
 .env/
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE/editor folders
+# IDEs
 .vscode/
 .idea/
 *.swp
+*.swo
+*~
 
-# Test and coverage reports
-.coverage
-htmlcov/
+# Logs
 *.log
+logs/
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
+# Environment variables
+.env
 
-# Temporary files
-*.tmp
-*.bak
-*.orig
-
-# Node modules (if any frontend)
+# Frontend (when developed)
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Build outputs
+/backend/dist/
+/frontend/dist/
+/frontend/build/
