@@ -200,6 +200,11 @@ class MyHandler(FileSystemEventHandler):
     def on_modified(self, event):
         self._queue_event_if_pdf(event)
 
+    def on_moved(self, event):
+        if not event.is_directory:
+            event.src_path = event.dest_path
+            self._queue_event_if_pdf(event)
+
 # --- Helper Functions ---
 
 def add_log(level, message, file_path=None):
