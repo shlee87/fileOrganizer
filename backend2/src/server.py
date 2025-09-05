@@ -550,25 +550,38 @@ def get_file_preview():
     would_skip = 0
 
     if workplace_path.exists() and workplace_path.is_dir():
-        for file_path in workplace_path.glob("*.pdf"):
+        for file_path in workplace_path.iterdir():
+            if not file_path.is_file():
+                continue
+
             total_files += 1
-            parsed = FilenameParser.parse_filename(file_path.name)
-            
-            if parsed and FilenameParser.is_signed_status(parsed.get('status', '')):
-                would_process += 1
-                preview_results.append({
-                    "file_path": str(file_path),
-                    "would_process": True,
-                    "reason": "Matches pattern and contains signed status",
-                    "parsed_metadata": parsed
-                })
+
+            if file_path.suffix.lower() == '.pdf':
+                parsed = FilenameParser.parse_filename(file_path.name)
+                
+                if parsed and FilenameParser.is_signed_status(parsed.get('status', '')):
+                    would_process += 1
+                    preview_results.append({
+                        "file_path": str(file_path),
+                        "would_process": True,
+                        "reason": "Matches pattern and contains signed status",
+                        "parsed_metadata": parsed
+                    })
+                else:
+                    would_skip += 1
+                    preview_results.append({
+                        "file_path": str(file_path),
+                        "would_process": False,
+                        "reason": "No signed status keyword found" if parsed else "Filename doesn't match pattern",
+                        "parsed_metadata": parsed
+                    })
             else:
                 would_skip += 1
                 preview_results.append({
                     "file_path": str(file_path),
                     "would_process": False,
-                    "reason": "No signed status keyword found" if parsed else "Filename doesn't match pattern",
-                    "parsed_metadata": parsed
+                    "reason": "Non-PDF file, skipped",
+                    "parsed_metadata": None
                 })
 
     return jsonify({
