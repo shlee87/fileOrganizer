@@ -1,0 +1,13 @@
+{
+  "workplace_path": "/tmp/workplace",
+  "destination_root": "/tmp/destination",
+  "stable_wait_seconds": 5.0,
+  "dry_run_mode": true,
+  "status_keywords": [
+    "signed",
+    "executed",
+    "final"
+  ],
+  "filename_pattern": "^(?P<doc>.+?)_(?P<client>.+?)_(?P<date>\\\\d{4}-?\\\\d{2}-?\\\\d{2})_(?P<status>.+?)\\\\.pdf$",
+  "log_level": "INFO"
+}
