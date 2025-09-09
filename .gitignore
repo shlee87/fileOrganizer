@@ -63,3 +63,6 @@ yarn-error.log*
 /backend/dist/
 /frontend/dist/
 /frontend/build/
+
+# Testing
+tests/

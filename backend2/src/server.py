@@ -39,7 +39,7 @@ STATE = {
         "destination_root": "/Users/seonghoonyi/Documents/projects/fileOrganizer/tests/fixtures/destination",
         "stability_wait_seconds": 10,
         "dry_run_mode": False,
-        "status_keywords": ["signed", "executed", "final"],
+        "status_keywords": ["signed"],
         "filename_pattern": r'^(?P<doc>.+?)_(?P<client>.+?)_(?P<date>\d{4}-?\d{2}-?\d{2})_(?P<status>.+?)\.pdf$',
         "log_level": "INFO",
     },
@@ -167,6 +167,7 @@ class MyHandler(FileSystemEventHandler):
     def __init__(self, event_queue: queue.Queue):
         self.event_queue = event_queue
         self.processing = set()
+        self.processing_lock = threading.Lock()
 
     def _queue_event_if_pdf(self, event):
         if event.is_directory:
@@ -183,6 +184,11 @@ class MyHandler(FileSystemEventHandler):
 
         if p in self.processing:
             return
+        with self.processing_lock:
+            if p in self.processing:
+                return
+            self.processing.add(p)
+            self.event_queue.put(event)
 
         self.processing.add(p)
         self.event_queue.put(event)
@@ -326,6 +332,9 @@ def file_processor_thread():
                 if handler and isinstance(handler, MyHandler):
                     if filepath in handler.processing:
                         handler.processing.remove(filepath)
+                    with handler.processing_lock:
+                        if filepath in handler.processing:
+                            handler.processing.remove(filepath)
         except queue.Empty:
             continue
         except Exception as e:
@@ -460,7 +469,6 @@ def start_service():
 @app.route('/api/v1/stop', methods=['POST'])
 def stop_service():
     try:
-        # Immediately change status and respond
         with STATE_LOCK:
             if STATE["status"] == "stopped":
                 return jsonify({"error": "Service is already stopped"}), 409
@@ -469,30 +477,34 @@ def stop_service():
             STATE["status"] = "stopped"
             STATE["start_time"] = None
 
-        # Return response immediately, cleanup in background
-        response = jsonify({"message": "Service stop initiated"})
+        # Stop and wait for observer and processor threads to finish
+        observer = STATE.get('observer')
+        processor_thread = STATE.get('observer_thread')
+
+        if observer:
+            add_log("INFO", "Stopping file system observer...")
+            observer.stop()
+            observer.join(timeout=5) # Wait for observer to terminate
         
-        # Schedule cleanup in background thread
-        def cleanup():
-            try:
-                observer = STATE.get('observer')
-                if observer:
-                    add_log("INFO", "Cleaning up observer...")
-                    observer.stop()
-                STATE['observer'] = None
-                STATE['observer_thread'] = None
-                add_log("INFO", "Service cleanup completed")
-            except Exception as e:
-                add_log("WARNING", f"Cleanup error: {e}")
+        if processor_thread and processor_thread.is_alive():
+            add_log("INFO", "Waiting for file processor to finish...")
+            processor_thread.join(timeout=5) # Wait for processor to terminate
+
+        STATE['observer'] = None
+        STATE['observer_thread'] = None
         
-        cleanup_thread = threading.Thread(target=cleanup, daemon=True)
-        cleanup_thread.start()
-        
-        return response
+        add_log("INFO", "Service stopped successfully")
+        broadcast_status()
+        return jsonify({"message": "Service stopped successfully"})
         
     except Exception as e:
-        add_log("ERROR", f"Stop service error: {e}")
-        return jsonify({"error": str(e)}), 500
+        error_msg = f"Failed to stop gracefully: {str(e)}"
+        add_log("ERROR", error_msg)
+        with STATE_LOCK:
+            STATE["status"] = "error"
+            STATE["last_error"] = error_msg
+        broadcast_status()
+        return jsonify({"error": error_msg}), 500
 
 @app.route('/api/v1/force-reset', methods=['POST'])
 def force_reset():
