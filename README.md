@@ -1,3 +1,5 @@
+
+
 # File Organizer
 
 A full-stack application for automatically organizing signed PDF documents. The system watches a workplace folder and moves signed PDFs to organized destination folders based on filename metadata.
